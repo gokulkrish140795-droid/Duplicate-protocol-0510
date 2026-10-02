@@ -1,0 +1,482 @@
+/* ==========================================================================
+   AR Scavenger Hunt — Design System & iOS Safe Area Styles
+   ========================================================================== */
+
+:root {
+  --primary-glow: #00e5ff;
+  --gold-glow: #ffd700;
+  --glass-bg: rgba(12, 18, 28, 0.72);
+  --glass-border: rgba(0, 229, 255, 0.35);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --pulse-speed: 1.2s;
+  --vignette-alpha: 0.4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   AR Viewport Container & Transparent WebGL Canvas
+   -------------------------------------------------------------------------- */
+#ar-container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  background: transparent !important;
+}
+
+/* All asset videos for holograms & frames MUST remain hidden texture sources */
+a-assets,
+a-assets video {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure any camera video (whether in #ar-container or in body, with or without id) is full screen and visible */
+video:not([id]),
+#ar-container > video,
+body > video {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  z-index: 0 !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+a-scene {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+.a-canvas {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+/* Hide default A-Frame VR/AR buttons, modals, and loaders */
+.a-enter-vr,
+.a-enter-ar,
+.a-orientation-modal,
+.a-dialog,
+.a-loader-title {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Proximity Radar Vignette (Screen Border Pulse)
+   -------------------------------------------------------------------------- */
+#radar-vignette {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#radar-vignette.active {
+  opacity: 1;
+}
+
+#radar-vignette.proximity {
+  box-shadow: inset 0 0 45px rgba(0, 229, 255, var(--vignette-alpha, 0.5));
+  animation: proximityPulse var(--pulse-speed, 0.8s) infinite ease-in-out;
+}
+
+#radar-vignette.lock {
+  box-shadow: inset 0 0 65px rgba(0, 255, 170, 0.9);
+  animation: lockFlash 0.6s ease-out;
+}
+
+@keyframes proximityPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.008); }
+}
+
+@keyframes lockFlash {
+  0% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* --------------------------------------------------------------------------
+   UI Container Layer (Over A-Frame Canvas)
+   -------------------------------------------------------------------------- */
+#ui-layer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  z-index: 100;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: max(20px, env(safe-area-inset-top, 20px)) 16px max(32px, env(safe-area-inset-bottom, 32px)) 16px;
+}
+
+/* Interactive elements inside UI layer enable pointer events */
+.interactive {
+  pointer-events: auto;
+}
+
+/* Top Status HUD */
+.top-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.icon-btn {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+  background: rgba(0, 229, 255, 0.25);
+}
+
+/* Center Scanning Guide / Banner */
+.guidance-box {
+  align-self: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+  max-width: 90%;
+}
+
+/* Bottom Context Action Button */
+.bottom-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 16px 36px;
+  border-radius: 30px;
+  box-shadow: 0 6px 20px rgba(0, 198, 255, 0.45);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-btn:active {
+  transform: scale(0.94);
+  box-shadow: 0 2px 10px rgba(0, 198, 255, 0.3);
+}
+
+.action-btn.secondary {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--primary-glow);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   Memory Cards (kept — reused inside menu progress list)
+   -------------------------------------------------------------------------- */
+.memory-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.memory-card.unlocked {
+  border-color: var(--primary-glow);
+}
+
+.memory-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.memory-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(0, 229, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.memory-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.memory-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-small {
+  flex: 1;
+  background: rgba(0, 229, 255, 0.15);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Menu Panel (replaces old drawer)
+   -------------------------------------------------------------------------- */
+#menu-btn {
+  font-size: 20px;
+}
+
+#menu-panel {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 300px;
+  height: 100%;
+  background: rgba(8, 12, 20, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--glass-border);
+  z-index: 30;
+  padding: env(safe-area-inset-top, 24px) 20px env(safe-area-inset-bottom, 24px) 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
+  overflow-y: auto;
+}
+
+#menu-panel.open {
+  right: 0;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-glow);
+}
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.menu-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* SFX Toggle Switch */
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  transition: background 0.25s ease;
+  cursor: pointer;
+}
+
+.toggle-switch.active {
+  background: var(--primary-glow);
+}
+
+.toggle-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* Empty Progress Message */
+.empty-progress {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px 10px;
+  font-style: italic;
+}
+
+/* Menu Restart Button */
+.menu-restart-btn {
+  width: 100%;
+  background: rgba(255, 80, 80, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  color: #ff6b6b;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.menu-restart-btn:active {
+  background: rgba(255, 80, 80, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Celebration Overlay (all targets discovered)
+   -------------------------------------------------------------------------- */
+#celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(5, 8, 14, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+#celebration-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.celebration-title {
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+
+.celebration-message {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  max-width: 320px;
+  margin-bottom: 28px;
+}

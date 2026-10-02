@@ -1,0 +1,8 @@
+{
+  "name": "Birthday AR Scavenger Hunt",
+  "description": "An interactive WebAR birthday scavenger hunt with holographic memory discoveries and proximity radar.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

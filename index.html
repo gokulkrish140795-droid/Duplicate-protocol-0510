@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Birthday AR Scavenger Hunt</title>
+    <meta name="description" content="An interactive WebAR birthday scavenger hunt with holographic memory discoveries and proximity radar." />
+    <meta property="og:title" content="Birthday AR Scavenger Hunt" />
+    <meta property="og:description" content="An interactive WebAR birthday scavenger hunt with holographic memory discoveries and proximity radar." />
+    
+    <!-- A-Frame and MindAR for WebAR Image Tracking -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- Screen Edge Proximity Radar Vignette -->
+    <div id="radar-vignette"></div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer">
+      <!-- Top HUD — Menu Only -->
+      <div class="top-hud">
+        <div></div>
+        <button id="menu-btn" class="icon-btn interactive" title="Menu">☰</button>
+      </div>
+
+      <!-- Center Dynamic Guidance Prompt -->
+      <div id="guidance-box" class="guidance-box">
+        Tap below to start your birthday AR journey!
+      </div>
+
+      <!-- Bottom Context Action Controls -->
+      <div class="bottom-controls">
+        <button id="main-action-btn" class="action-btn interactive">
+          <span>✨ Start Scavenger Hunt</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Slide-In Menu Panel -->
+    <div id="menu-panel">
+      <div class="menu-header">
+        <div class="menu-title">Menu</div>
+        <button id="menu-close" class="icon-btn" style="width:30px;height:30px;font-size:12px;">✕</button>
+      </div>
+
+      <!-- SFX Toggle -->
+      <div class="menu-section">
+        <div class="menu-row interactive" id="sfx-toggle-row">
+          <span>🔊 Sound Effects</span>
+          <div class="toggle-switch active" id="sfx-toggle">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coaster Mapping Options -->
+      <div class="menu-section">
+        <div class="menu-section-label">Coaster Target Mapping</div>
+        <button id="swap-targets-btn" class="menu-restart-btn interactive" style="margin-top: 4px; border-color: rgba(0, 229, 255, 0.4); color: var(--primary-glow);">
+          🔄 Swap Coaster 1 ⇄ 2 Order
+        </button>
+      </div>
+
+      <!-- Saved Progress -->
+      <div class="menu-section">
+        <div class="menu-section-label">Saved Progress</div>
+        <div id="progress-list">
+          <div class="empty-progress" id="empty-progress-msg">
+            No memories discovered yet
+          </div>
+          <!-- Cards injected dynamically by JS on discovery -->
+        </div>
+      </div>
+
+      <!-- Restart (hidden until first discovery) -->
+      <div class="menu-section" id="restart-section" style="display: none;">
+        <button id="restart-btn" class="menu-restart-btn interactive">
+          🔄 Restart Scavenger Hunt
+        </button>
+      </div>
+    </div>
+
+    <!-- Celebration Screen (Unlocked when both coasters discovered & placed) -->
+    <div id="celebration-overlay">
+      <div class="celebration-title">🎉 Happy Birthday! 🎉</div>
+      <div class="celebration-message">
+        You discovered all the holographic memories! Enjoy the moments and keep them with you always.
+      </div>
+      <button id="celebration-restart-btn" class="action-btn interactive">
+        <span>🔄 Restart Scavenger Hunt</span>
+      </button>
+    </div>
+
+    <!--
+      ═══════════════════════════════════════════════════════════════════
+      5-TARGET ROSTER (v2 — calibrated 2026-10-02)
+
+        Index 0 — COASTER: Birthday Wishes   → dummy.mp4 (swap → montage.mp4 on release)
+        Index 1 — COASTER: Uncle Memorial    → memorial.mp4  [Chroma Key Hologram]
+        Index 2 — EASTER EGG FRAME #1        → frame1_live.mp4
+        Index 3 — EASTER EGG FRAME #2        → frame2_live.mp4
+        Index 4 — EASTER EGG FRAME #3        → frame3_live.mp4
+
+      SCALABILITY: To add a new target:
+        1. Add <video> in <a-assets> below
+        2. Add <a-entity mindar-image-target> in <a-scene>
+        3. Add entry to TARGETS array in src/main.js
+        4. Recompile targets.mind via https://hiukim.github.io/mind-ar-js-doc/tools/compile
+      ═══════════════════════════════════════════════════════════════════
+    -->
+
+    <!-- MindAR Viewport Container -->
+    <div id="ar-container">
+      <a-scene
+        id="ar-scene"
+        mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;"
+        loading-screen="enabled: false"
+        embedded
+        color-space="sRGB"
+        renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+      >
+      <a-assets timeout="5000">
+        <!-- ── COASTER VIDEO ASSETS (Scavenger Hunt) ─────────────────────── -->
+
+        <!-- Target 0 — Birthday Wishes -->
+        <video
+          id="video-montage"
+          src="./assets/montage.mp4"
+          preload="none"
+          loop
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+
+        <!-- Target 1 — Uncle Memorial (Chroma Key Hologram) -->
+        <video
+          id="video-memorial"
+          src="./assets/memorial.mp4"
+          preload="none"
+          loop
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+
+        <!-- ── LIVING PHOTO FRAME VIDEO ASSETS (Silent Easter Eggs) ─────── -->
+
+        <!-- Target 2 — Living Frame #1 -->
+        <video
+          id="video-frame1"
+          src="./assets/frame1_live.mp4"
+          preload="none"
+          loop
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+
+        <!-- Target 3 — Living Frame #2 -->
+        <video
+          id="video-frame2"
+          src="./assets/frame2_live.mp4"
+          preload="none"
+          loop
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+
+        <!-- Target 4 — Living Frame #3 -->
+        <video
+          id="video-frame3"
+          src="./assets/frame3_live.mp4"
+          preload="none"
+          loop
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+      </a-assets>
+
+      <!-- Main Camera — fixed at 0 0 0 as required by MindAR computer vision pipeline -->
+      <a-camera id="main-camera" position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- ── COASTER TARGETS (Scavenger Hunt) ──────────────────────────── -->
+
+      <!-- Target 0: Birthday Wishes Coaster -->
+      <a-entity id="target-0" mindar-image-target="targetIndex: 0"></a-entity>
+
+      <!-- Target 1: Uncle Memorial Coaster (Chroma Key Hologram) -->
+      <a-entity id="target-1" mindar-image-target="targetIndex: 1"></a-entity>
+
+      <!-- ── EASTER EGG FRAME TARGETS (Silent — zero coaster UI) ────────── -->
+
+      <!-- Target 2: Living Frame #1 -->
+      <a-entity id="target-2" mindar-image-target="targetIndex: 2"></a-entity>
+
+      <!-- Target 3: Living Frame #2 -->
+      <a-entity id="target-3" mindar-image-target="targetIndex: 3"></a-entity>
+
+      <!-- Target 4: Living Frame #3 -->
+      <a-entity id="target-4" mindar-image-target="targetIndex: 4"></a-entity>
+
+      <!-- Dynamic World Container for Placed Holograms -->
+      <a-entity id="world-holograms-root"></a-entity>
+    </a-scene>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
